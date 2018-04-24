@@ -55,6 +55,8 @@
 #include "MailMsg.h"
 #include "LEDThread.h"
 #include "PrintThread.h"
+#include <string>
+
 
 extern "C" void mbed_reset();
 
@@ -82,7 +84,7 @@ m3pi m3pi(p23, p9, p10);
  */
 Mutex mqttMtx;
 
-static char *topic = "m3pi-mqtt-ee250";
+static char *topic = "pololu-13/move";
 
 /**
  * @brief      controls movement of the 3pi
@@ -132,50 +134,33 @@ void movement(char command, char speed, int delta_t)
 void messageArrived(MQTT::MessageData& md)
 {
     MQTT::Message &message = md.message;
-    MailMsg *msg;
+    
+    printf("Message recieved: %s \n", message.payload);
 
-    /* our messaging standard says the first byte denotes which thread to 
-       forward the packet payload to */
-    char fwdTarget = ((char *)message.payload)[0];
+    //char* intermediary = (char*) message.payload;
 
-    /* Ship (or "dispatch") the entire message via Mail to threads since the 
-       reference to messages will be destroyed by the MQTT thread when this 
-       callback returns */
-    switch(fwdTarget)
+    string msg( (char*) message.payload);
+
+    if(msg == "w")
     {
-        case FWD_TO_PRINT_THR:
-            printf("fwding to print thread\n");
+        printf("Move FORWARD");
+        movement('s', 25, 100);
+    }
+    else if(msg == "a")
+    {
+        printf("Move LEFT");
+        movement('a', 25, 100);
+    }
 
-            /* allocate the memory for a piece of mail */
-            msg = getPrintThreadMailbox()->alloc();
-
-            if (!msg) {
-                printf("print thread mailbox full!\n");
-                break;
-            }
-
-            /* copy the message into the newly allocated MailMsg struct */
-            memcpy(msg->content, message.payload, message.payloadlen);
-            msg->length = message.payloadlen;
-
-            /* put the piece of mail into the target thread's mailbox */
-            getPrintThreadMailbox()->put(msg);
-            break;
-        case FWD_TO_LED_THR:
-            printf("fwding to led thread\n");
-            msg = getLEDThreadMailbox()->alloc();
-            if (!msg) {
-                printf("led thread mailbox full!\n");
-                break;
-            }
-            memcpy(msg->content, message.payload, message.payloadlen);
-            msg->length = message.payloadlen;
-            getLEDThreadMailbox()->put(msg);
-            break;
-        default:
-            /* do nothing */
-            printf("Unknown MQTT message\n");
-            break;
+    else if(msg == "s")
+    {
+        printf("Move BACKWARD");
+        movement('w', 25, 100);
+    }
+    else if(msg == "d")
+    {
+        printf("Move RIGHT");
+        movement('d', 25, 100);
     }
 }
 

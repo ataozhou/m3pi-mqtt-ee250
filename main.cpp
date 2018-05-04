@@ -140,27 +140,32 @@ void messageArrived(MQTT::MessageData& md)
     //char* intermediary = (char*) message.payload;
 
     string msg( (char*) message.payload);
+    string direction = msg.substr(0,1);
+    string units = msg.substr(1);
+    int time = atoi(units.c_str()) * 10;
 
-    if(msg == "w")
+    if(direction == "w")
     {
         printf("Move FORWARD");
-        movement('s', 25, 100);
+        movement('s', 25, time);
     }
-    else if(msg == "a")
+    else if(direction == "a")
     {
         printf("Move LEFT");
-        movement('a', 25, 100);
+        movement('a', 25, 366);
+        movement('s', 25, time);
     }
 
-    else if(msg == "s")
+    else if(direction == "s")
     {
         printf("Move BACKWARD");
-        movement('w', 25, 100);
+        movement('w', 25, time);
     }
-    else if(msg == "d")
+    else if(direction == "d")
     {
         printf("Move RIGHT");
-        movement('d', 25, 100);
+        movement('d', 25, 366);
+        movement('s', 25, time);
     }
 }
 
@@ -240,7 +245,7 @@ int main()
        another thread, you can look at the structure of the two threads we 
        provided and make a copy of it. Otherewise, you can gut out the two 
        threads and insert your application code. Read the LEDThread and 
-       PrintThread files to understand how these threads work.*/
+       PrintThread files to understand how these threads work. */
     Thread ledThr;
     Thread printThr;
 
@@ -251,7 +256,7 @@ int main()
     /* Here, we do not pass the pointer in. This means the printing thread 
        won't be able to publish any MQTT messages. Modify this accordingly if
        you need to publish. */
-    printThr.start(printThread);
+    printThr.start(printThread); 
 
     /* The main thread will now run in the background to keep the MQTT/TCP 
      connection alive. MQTTClient is not an asynchronous library. Paho does

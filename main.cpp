@@ -137,11 +137,15 @@ void messageArrived(MQTT::MessageData& md)
     
     printf("Message recieved: %s \n", message.payload);
 
-    //char* intermediary = (char*) message.payload;
+
 
     string msg( (char*) message.payload);
+    // grabs direction (forward right left backwards)
     string direction = msg.substr(0,1);
+
+    //how many units to move
     string units = msg.substr(1);
+    //modified to make distance better
     int time = atoi(units.c_str()) * 10;
 
     if(direction == "w")
